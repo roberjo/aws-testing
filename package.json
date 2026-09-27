@@ -1,0 +1,44 @@
+{
+  "name": "fakecloud-poc",
+  "private": true,
+  "description": "Proof of concept evaluating fakecloud as a local AWS stand-in: a production-shaped, event-driven app (Terraform, Lambda, SNS, SQS, DynamoDB, S3, Kafka, CloudFront, Route 53, Next.js) deployed and tested end to end on a laptop",
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "services/functions",
+    "services/job-worker",
+    "web",
+    "tests"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build -w @poc/core && npm run build -w @poc/functions && npm run build -w @poc/job-worker && npm run build -w @poc/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:unit": "npm run test -w @poc/core",
+    "test:e2e": "npm run test -w @poc/tests"
+  },
+  "allowScripts": {
+    "@confluentinc/kafka-javascript": true,
+    "esbuild": true,
+    "unrs-resolver": true,
+    "fsevents": true
+  },
+  "keywords": [
+    "fakecloud",
+    "aws",
+    "terraform",
+    "lambda",
+    "sqs",
+    "sns",
+    "dynamodb",
+    "kafka",
+    "confluent",
+    "cloudfront",
+    "route53",
+    "nextjs",
+    "integration-testing",
+    "poc"
+  ]
+}

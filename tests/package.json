@@ -1,0 +1,21 @@
+{
+  "name": "@poc/tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cloudfront": "^3.1141.0",
+    "@aws-sdk/client-dynamodb": "^3.890.0",
+    "@aws-sdk/client-route-53": "^3.890.0",
+    "@aws-sdk/client-s3": "^3.890.0",
+    "@aws-sdk/client-sqs": "^3.890.0",
+    "@types/node": "^24.0.0",
+    "fakecloud": "^0.46.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

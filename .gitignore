@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+out/
+*.tsbuildinfo
+.env*.local
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+infra/envs/*/.terraform.lock.hcl.bak
+build/

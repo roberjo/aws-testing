@@ -1,0 +1,44 @@
+# Local cloud: fakecloud emulates AWS on :4566 and uses the Docker socket to run
+# real Lambda containers and the MSK Kafka broker.
+services:
+  fakecloud:
+    image: ghcr.io/faiscadev/fakecloud:${FAKECLOUD_VERSION:-latest}
+    container_name: fcpoc-fakecloud
+    # --dns runs a real resolver that answers from Route 53 records.
+    command: ["--dns", "--dns-addr", "0.0.0.0:53", "--dns-upstream", "${FAKECLOUD_DNS_UPSTREAM:-1.1.1.1:53}"]
+    # fakecloud resolves names through its own Route 53 zones first, so
+    # CloudFront -> API Gateway origins work the same on every Docker host.
+    dns:
+      - 127.0.0.1
+    ports:
+      - "4566:4566"
+      - "15353:53/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      FAKECLOUD_ADDR: "0.0.0.0:4566"
+      FAKECLOUD_REGION: "us-east-1"
+      FAKECLOUD_LOG: "info"
+    healthcheck:
+      test: ["CMD", "fakecloud", "healthcheck"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Optional: run the Kafka job worker in a container instead of `npm run worker`.
+  #   docker compose --profile worker up -d --build
+  job-worker:
+    profiles: ["worker"]
+    build:
+      context: .
+      dockerfile: services/job-worker/Dockerfile
+    env_file: services/job-worker/.env.local
+    environment:
+      AWS_ENDPOINT_URL: "http://host.docker.internal:4566"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      fakecloud:
+        condition: service_healthy

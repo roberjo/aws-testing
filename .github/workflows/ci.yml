@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly: catch fakecloud regressions/fixes in ghcr.io/faiscadev/fakecloud:latest
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive infra
+      - run: terraform -chdir=infra/envs/local init -backend=false && terraform -chdir=infra/envs/local validate
+      - run: terraform -chdir=infra/envs/aws init -backend=false && terraform -chdir=infra/envs/aws validate
+
+  e2e-fakecloud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TF_VAR_lambda_architecture: x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      - run: npm ci
+      - name: Deploy the whole stack to fakecloud
+        run: make up
+      - name: No drift on a second plan
+        run: make drift
+      - name: Tests
+        run: make test
+      - name: Diagnostics
+        if: failure()
+        run: |
+          docker ps -a
+          docker compose --profile worker logs --tail=300
+          curl -s localhost:4566/_fakecloud/lambda/invocations | head -c 20000
+      - name: Tear down
+        if: always()
+        run: make down
