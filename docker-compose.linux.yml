@@ -1,0 +1,28 @@
+# Native-Linux Docker override (selected automatically by the Makefile).
+#
+# fakecloud (<= 0.46) decides whether to pass `--add-host host.docker.internal`
+# to Lambda containers by checking whether that alias resolves inside its own
+# container. The extra_hosts entry in docker-compose.yml makes it resolve, so on
+# native Linux (where Docker does not provide the alias) Lambdas are started
+# without it and cannot reach fakecloud. Running fakecloud on the host network
+# in "not in a container" mode takes its bare-Linux path instead: Lambdas get
+# the bridge-gateway mapping, and Lambda/Kafka containers are reached on
+# 127.0.0.1. See docs/fakecloud-findings.md (finding 15).
+services:
+  fakecloud:
+    network_mode: host
+    ports: !reset []
+    extra_hosts: !reset []
+    dns: !reset []
+    # Port 53 on the host is usually taken (systemd-resolved); the local zone is
+    # still resolvable through /_fakecloud/dns/resolve and *.localhost resolves
+    # natively on systemd hosts.
+    command: ["--dns", "--dns-addr", "127.0.0.1:15353"]
+    environment:
+      FAKECLOUD_IN_CONTAINER: "0"
+
+  job-worker:
+    network_mode: host
+    extra_hosts: !reset []
+    environment:
+      AWS_ENDPOINT_URL: "http://localhost:4566"

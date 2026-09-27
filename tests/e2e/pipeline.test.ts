@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { PurgeQueueCommand, ReceiveMessageCommand, SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import {
@@ -16,6 +17,7 @@ import {
 
 const s3 = new S3Client({ ...awsConfig, forcePathStyle: true });
 const sqs = new SQSClient(awsConfig);
+const ddb = new DynamoDBClient(awsConfig);
 
 describe("event-driven application pipeline", () => {
   it("approves a strong application: API -> SNS -> SQS -> validator -> SQS -> Kafka -> worker", async () => {
@@ -120,18 +122,48 @@ describe("event-driven application pipeline", () => {
   });
 
   it("keeps stats in sync via the DynamoDB stream projector", async () => {
-    const before = (await api("/stats")).body;
     const { body } = await postJson("/applications", applicant());
     await waitForStatus(body.id, ["APPROVED"]);
 
-    const after = await eventually(
+    // The projector is eventually consistent, so compare the counters against
+    // the source of truth (every application row) until they converge, rather
+    // than against a before/after snapshot that can race earlier tests.
+    const truth = async () => {
+      const counts: Record<string, number> = {};
+      let total = 0;
+      let ExclusiveStartKey: Record<string, any> | undefined;
+      do {
+        const page = await ddb.send(
+          new QueryCommand({
+            TableName: tf().table_name,
+            IndexName: "gsi1",
+            KeyConditionExpression: "gsi1pk = :p",
+            ExpressionAttributeValues: { ":p": { S: "APPLICATION" } },
+            ExpressionAttributeNames: { "#s": "status" },
+            ProjectionExpression: "#s",
+            ExclusiveStartKey,
+          }),
+        );
+        for (const item of page.Items ?? []) {
+          total++;
+          counts[item.status.S!] = (counts[item.status.S!] ?? 0) + 1;
+        }
+        ExclusiveStartKey = page.LastEvaluatedKey;
+      } while (ExclusiveStartKey);
+      return { total, counts };
+    };
+
+    const converged = await eventually(
       async () => {
-        const { body: s } = await api("/stats");
-        return s.total === before.total + 1 && s.byStatus.APPROVED === before.byStatus.APPROVED + 1 ? s : undefined;
+        const [{ body: stats }, actual] = await Promise.all([api("/stats"), truth()]);
+        const matches =
+          stats.total === actual.total &&
+          Object.entries(stats.byStatus).every(([k, v]) => v === (actual.counts[k] ?? 0));
+        return matches ? stats : undefined;
       },
-      { what: "stats projection" },
+      { what: "stats projection to match the table" },
     );
-    expect(after.byStatus.SUBMITTED).toBe(before.byStatus.SUBMITTED);
+    expect(converged.byStatus.APPROVED).toBeGreaterThanOrEqual(1);
     expect((await invocationsOf(tf().function_names.projector)).length).toBeGreaterThan(0);
   });
 

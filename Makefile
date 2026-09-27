@@ -1,6 +1,9 @@
 # One-command local cloud:  make up && make test
 SHELL := /bin/bash
-COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+# Native-Linux Docker needs a host-network override (docs/fakecloud-findings.md, finding 15).
+COMPOSE_FILES := -f docker-compose.yml $(if $(filter Linux,$(shell uname -s)),-f docker-compose.linux.yml)
+COMPOSE := $(COMPOSE_BIN) $(COMPOSE_FILES)
 ARCH := $(shell uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/x86_64/')
 export TF_VAR_lambda_architecture ?= $(if $(filter arm64,$(ARCH)),arm64,x86_64)
 

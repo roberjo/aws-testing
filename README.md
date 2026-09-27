@@ -12,7 +12,7 @@ parts emulators usually get wrong: the wiring *between* services.
 
 **Result:** the whole stack runs on fakecloud, from `terraform apply` to a browser
 at `http://app.fcpoc.localhost:4566`. 22 automated tests pass against it. Getting
-there surfaced 14 findings: fakecloud bugs, gaps and design constraints, 11 of
+there surfaced 15 findings: fakecloud bugs, gaps and design constraints, 12 of
 which needed small, documented, local-only workarounds. They are written up in
 **[docs/fakecloud-findings.md](docs/fakecloud-findings.md)**, the main output of
 this POC.
@@ -60,7 +60,8 @@ local-vs-AWS differences.
 
 ## Quick start
 
-Requirements: Docker (Docker Desktop, Colima or Linux), Node.js 22+ (24 recommended), `make`.
+Requirements: Docker (Docker Desktop, Colima, or native Linux, where the Makefile adds
+`docker-compose.linux.yml` for finding 15), Node.js 22+ (24 recommended), `make`.
 Terraform is optional: `scripts/tf.sh` falls back to the official Terraform image.
 
 ```bash
@@ -90,14 +91,14 @@ web/                    Next.js 16 static-export UI
 infra/                  Terraform: shared `app` module, local (fakecloud) and aws environments — see infra/README.md
 tests/                  end-to-end suite using the fakecloud SDK — see tests/README.md
 docs/                   findings, architecture, AWS deployment guide
-docker-compose.yml      fakecloud (with its DNS resolver) + optional worker container
+docker-compose.yml      fakecloud (with its DNS resolver) + worker container; *.linux.yml override for native Linux
 ```
 
 ## Documentation
 
 | Document | Read it for |
 |---|---|
-| [docs/fakecloud-findings.md](docs/fakecloud-findings.md) | **The evaluation:** what worked, 14 findings with evidence, workarounds and upstream fixes |
+| [docs/fakecloud-findings.md](docs/fakecloud-findings.md) | **The evaluation:** what worked, 15 findings with evidence, workarounds and upstream fixes |
 | [docs/architecture.md](docs/architecture.md) | Event flow, state machine, data model, local vs AWS |
 | [docs/deploying-to-aws.md](docs/deploying-to-aws.md) | Deploying the same stack to AWS + Confluent Cloud (validated, not yet applied) |
 | [infra/README.md](infra/README.md) | Terraform layout, running it, local guard rails |

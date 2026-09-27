@@ -61,7 +61,7 @@ jobs:
         if: failure()
         run: |
           docker ps -a
-          docker compose --profile worker logs --tail=300
+          docker compose -f docker-compose.yml -f docker-compose.linux.yml --profile worker logs --tail=300
           curl -s localhost:4566/_fakecloud/lambda/invocations | head -c 20000
       - name: Tear down
         if: always()

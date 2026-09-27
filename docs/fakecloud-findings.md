@@ -18,14 +18,14 @@ DNS, and a **real Apache Kafka broker** provisioned through the MSK API. A cold
 `make up` takes about 2 minutes. The 22-test suite (8 unit, 14 end-to-end) runs in
 about 15 seconds against it.
 
-It took 11 workarounds to get there, all small, local-only and documented. Two of
+It took 12 workarounds to get there, all small, local-only and documented. Two of
 the underlying bugs would have silently broken production-shaped behavior in
 tests (the SQS batching window and the redrive loop), and the tests caught them.
 That is exactly the kind of fidelity question a POC like this should answer.
 
 | Area | Works out of the box | Needed a workaround |
 |---|---|---|
-| Lambda (real containers, Node 24) | ✅ | credentials; warm-container env |
+| Lambda (real containers, Node 24) | ✅ | credentials; warm-container env; native-Linux networking |
 | SQS → Lambda ESM | ✅ basic, `ReportBatchItemFailures` | batching window; failure redrive |
 | DynamoDB + Streams → Lambda (with `FilterCriteria`) | ✅ | |
 | SNS → SQS (filter policies, raw delivery, SSE) | ✅ | |
@@ -150,6 +150,27 @@ does not resolve on a macOS host. The Kafka worker therefore runs as a container
 fakecloud implements SQS, Kinesis and DynamoDB Streams mappings, but not MSK or
 self-managed Kafka. Underwriting jobs are therefore consumed by the Node.js worker
 (Confluent's `@confluentinc/kafka-javascript` client), not by a Lambda.
+
+### 15. Lambda on native Linux: containers can't reach fakecloud when it runs in Docker
+
+- **Evidence:** the first GitHub Actions run (ubuntu-latest, native Docker) failed
+  every request whose Lambda called AWS, with 100× `connect ECONNREFUSED 127.0.0.1:4566`
+  inside the Lambda containers. The same stack passed on Colima and Docker Desktop.
+- **Cause:** in `fakecloud-core/src/container_net.rs`, `HostNetworking::detect`
+  suppresses the `--add-host host.docker.internal:<bridge-ip>` it normally passes to
+  Lambda containers when fakecloud is containerized *and* `host.docker.internal`
+  resolves inside its own container. It takes that as proof that the runtime
+  injects the alias natively. On native Linux the alias resolves only because of the
+  `extra_hosts: host.docker.internal:host-gateway` entry that fakecloud's own
+  `docker-compose.yml` recommends. So the heuristic fires wrongly and Lambdas start
+  without a route to fakecloud.
+- **Workaround:** `docker-compose.linux.yml`, which the Makefile selects on Linux,
+  runs fakecloud and the worker on the host network with `FAKECLOUD_IN_CONTAINER=0`.
+  That is fakecloud's bare-Linux path: Lambdas get the bridge-gateway mapping, and
+  Lambda and Kafka containers are reached on `127.0.0.1`.
+- **Upstream fix:** don't infer "runtime provides the alias natively" from resolution
+  alone (for example, check `/etc/hosts` for an `extra_hosts` entry, or probe from a
+  throwaway sibling container), or let users force the mode explicitly.
 
 ## What worked notably well
 
