@@ -1,0 +1,67 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Skip releases younger than 5 days; compromised versions are usually yanked by then.
+    # Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "terraform"
+    directories: ["/infra/envs/*", "/infra/modules/*"]
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Skip releases younger than 5 days; compromised versions are usually yanked by then.
+    # Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    groups:
+      terraform-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/job-worker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Skip releases younger than 5 days; compromised versions are usually yanked by then.
+    # Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    groups:
+      docker-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Skip releases younger than 5 days; compromised versions are usually yanked by then.
+    # Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    groups:
+      docker-compose-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Skip releases younger than 5 days; compromised versions are usually yanked by then.
+    # Security updates ignore cooldown.
+    cooldown:
+      default-days: 5
+    groups:
+      github-actions-minor-patch:
+        update-types: ["minor", "patch"]
