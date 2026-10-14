@@ -15,7 +15,7 @@
     "@aws-sdk/client-sqs": "^3.1148.0",
     "@types/node": "^24.0.0",
     "fakecloud": "^0.50.0",
-    "typescript": "^5.9.0",
+    "typescript": "^7.0.2",
     "vitest": "^3.2.0"
   }
 }
