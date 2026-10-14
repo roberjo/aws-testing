@@ -17,11 +17,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.890.0",
-    "@aws-sdk/client-s3": "^3.890.0",
-    "@aws-sdk/client-sns": "^3.890.0",
-    "@aws-sdk/client-sqs": "^3.890.0",
-    "@aws-sdk/lib-dynamodb": "^3.890.0"
+    "@aws-sdk/client-dynamodb": "^3.1148.0",
+    "@aws-sdk/client-s3": "^3.1148.0",
+    "@aws-sdk/client-sns": "^3.1148.0",
+    "@aws-sdk/client-sqs": "^3.1148.0",
+    "@aws-sdk/lib-dynamodb": "^3.1148.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
