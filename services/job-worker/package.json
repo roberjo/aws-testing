@@ -11,9 +11,9 @@
     "dev": "node --env-file-if-exists=.env.local --import tsx src/index.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-kafka": "^3.890.0",
-    "@aws-sdk/client-sqs": "^3.890.0",
-    "@confluentinc/kafka-javascript": "^1.5.0",
+    "@aws-sdk/client-kafka": "^3.1148.0",
+    "@aws-sdk/client-sqs": "^3.1148.0",
+    "@confluentinc/kafka-javascript": "^1.11.0",
     "@poc/core": "*"
   },
   "devDependencies": {
