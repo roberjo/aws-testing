@@ -8,14 +8,14 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@aws-sdk/client-cloudfront": "^3.1151.0",
-    "@aws-sdk/client-dynamodb": "^3.1151.0",
-    "@aws-sdk/client-route-53": "^3.1151.0",
-    "@aws-sdk/client-s3": "^3.1151.0",
-    "@aws-sdk/client-sqs": "^3.1151.0",
+    "@aws-sdk/client-cloudfront": "^3.1154.0",
+    "@aws-sdk/client-dynamodb": "^3.1154.0",
+    "@aws-sdk/client-route-53": "^3.1154.0",
+    "@aws-sdk/client-s3": "^3.1154.0",
+    "@aws-sdk/client-sqs": "^3.1154.0",
     "@types/node": "^24.0.0",
-    "fakecloud": "^0.50.0",
+    "fakecloud": "^0.51.0",
     "typescript": "^5.9.0",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.5"
   }
 }
