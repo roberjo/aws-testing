@@ -99,13 +99,11 @@ module "app" {
 
   # Inside Lambda containers fakecloud rewrites localhost URLs to the host,
   # so the functions' SDK clients reach fakecloud with no code changes.
-  # fakecloud does not vend execution-role credentials, so give the SDK static
-  # test keys (real AWS injects these itself and reserves the names).
+  # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are reserved Lambda keys; current
+  # fakecloud rejects them in CreateFunction, so they must not be set here.
   lambda_environment = {
-    AWS_ENDPOINT_URL      = "http://localhost:4566"
-    AWS_ACCESS_KEY_ID     = "test"
-    AWS_SECRET_ACCESS_KEY = "test"
-    S3_FORCE_PATH_STYLE   = "true"
+    AWS_ENDPOINT_URL    = "http://localhost:4566"
+    S3_FORCE_PATH_STYLE = "true"
   }
 
   hosted_zone_id  = aws_route53_zone.main.zone_id
