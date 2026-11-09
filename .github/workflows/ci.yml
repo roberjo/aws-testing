@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - run: terraform fmt -check -recursive infra
       - run: terraform -chdir=infra/envs/local init -backend=false && terraform -chdir=infra/envs/local validate
       - run: terraform -chdir=infra/envs/aws init -backend=false && terraform -chdir=infra/envs/aws validate
@@ -47,7 +47,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_wrapper: false
       - run: npm ci
